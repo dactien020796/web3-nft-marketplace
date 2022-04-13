@@ -29,59 +29,80 @@ describe("Charm token test", function () {
         });
     })
 
-    // describe("pause()", () => {
-    //     it("Should exception if not contract owner", async () => {
+    describe("pause()", () => {
+        it("Should exception if not contract owner", async () => {
+            expect(token.connect(accountB).pause()).to.be.revertedWith("Ownable: caller is not the owner");
+        });
+        it("Should exception if contract has been paused", async () => {
+            await token.pause();
+            expect(token.pause()).to.be.revertedWith("Pausable: paused");
+        });
+        it("Should pause successfully", async () => {
+            await expect(token.pause())
+                .to.emit(token, "Paused")
+                .withArgs(accountA.address);
+        });
+    })
 
-    //     });
-    //     it("Should exception if contract has been paused", async () => {
+    describe("unpause()", () => {
+        // TODO: Contract has been paused before all tests
+        beforeEach(async () => {
+            await token.pause();
+        });
 
-    //     });
-    //     it("Should pause successfully", async () => {
+        it("Should exception if not contract owner", async () => {
+            expect(token.connect(accountB).unpause()).to.be.revertedWith("Ownable: caller is not the owner");
+        });
+        it("Should exception if contract has been unpaused", async () => {
+            await token.unpause();
+            expect(token.unpause()).to.be.revertedWith("Pausable: unpaused");
+        });
+        it("Should unpause successfully", async () => {
+            await expect(token.unpause())
+                .to.emit(token, "Unpaused")
+                .withArgs(accountA.address);
+        });
+    })
 
-    //     });
-    // })
+    describe("addToBlacklist()", () => {
+        it("Should exception if add current sender to blacklist", async () => {
+            expect(token.addToBlacklist(accountA.address))
+                .to.be.revertedWith("Charm: Cannot add msg.sender to blacklist");
+        });
+        it("Should exception if not contract owner", async () => {
+            expect(token.connect(accountB.address).addToBlacklist(accountA.address))
+                .to.be.revertedWith("Ownable: caller is not the owner");
+        });
+        it("Should exception if account already on blacklist", async () => {
+            await token.addToBlacklist(accountB.address);
+            expect(token.addToBlacklist(accountB.address))
+                .to.be.revertedWith("Charm: Account already on blacklist");
+        });
+        it("Should add to blacklist successfully", async () => {
+            await expect(token.addToBlacklist(accountB.address))
+                .to.emit(token, "BlacklistAdded")
+                .withArgs(accountB.address);
+        });
+    })
 
-    // describe("unpause()", () => {
-    //     // TODO: Contract has been paused before all tests
-    //     it("Should exception if not contract owner", async () => {
+    describe("removeFromBlacklist()", () => {
+        // TODO: has some accounts on blacklists
+        beforeEach(async () => {
+            await token.addToBlacklist(accountB.address);
+        });
 
-    //     });
-    //     it("Should exception if contract has been unpaused", async () => {
-
-    //     });
-    //     it("Should unpause successfully", async () => {
-
-    //     });
-    // })
-
-    // describe("addToBlacklist()", () => {
-    //     it("Should exception if add current sender to blacklist", async () => {
-
-    //     });
-    //     it("Should exception if not contract owner", async () => {
-
-    //     });
-    //     it("Should exception if account already on blacklist", async () => {
-
-    //     });
-    //     it("Should add to blacklist successfully", async () => {
-
-    //     });
-    // })
-
-    // describe("removeFromBlacklist()", () => {
-    //     // TODO: has some accounts on blacklists
-    //     it("Should exception if remove current sender to blacklist", async () => {
-
-    //     });
-    //     it("Should exception if not contract owner", async () => {
-
-    //     });
-    //     it("Should exception if account not on blacklist", async () => {
-
-    //     });
-    //     it("Should remove from blacklist successfully", async () => {
-
-    //     });
-    // })
+        it("Should exception if not contract owner", async () => {
+            expect(token.connect(accountB.address).removeFromBlacklist(accountA.address))
+                .to.be.revertedWith("Ownable: caller is not the owner");
+        });
+        it("Should exception if account not on blacklist", async () => {
+            expect(token.removeFromBlacklist(accountC.address))
+                .to.be.revertedWith("Charm: Account not on blacklist");
+        });
+        it("Should remove from blacklist successfully", async () => {
+            await expect(token.removeFromBlacklist(accountB.address))
+                .to.emit(token, "BlacklistRemoved")
+                .withArgs(accountB.address);
+        });
+    })
 });
