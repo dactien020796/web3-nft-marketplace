@@ -48,7 +48,6 @@ contract NFTMarketplace is Ownable {
 
     constructor(
         address _nftAddress,
-        //uint256 _feeDecimal,
         uint256 _feeRate,
         address _feeRecipient
     ) {
