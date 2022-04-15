@@ -22,7 +22,7 @@ contract NFTMarketplace is Ownable {
     Counters.Counter private _orderIdCount;
     mapping(uint256 => Order) public orders;
     IERC721 public nftContract;
-    uint256 public feeRate = 1 ether;
+    uint256 public feeRate;
     address public feeRecipient;
     EnumerableSet.AddressSet private _supportedPaymentTokens;
 
@@ -96,7 +96,10 @@ contract NFTMarketplace is Ownable {
             _paymentToken != address(0),
             "NFTMarketplace: _paymentToken is zero address"
         );
-        require(_supportedPaymentTokens.add(_paymentToken));
+        require(
+            _supportedPaymentTokens.add(_paymentToken),
+            "NFTMarketplace: already supported"
+        );
     }
 
     function isPaymentTokenSupported(address _paymentToken)
@@ -132,6 +135,7 @@ contract NFTMarketplace is Ownable {
                 nftContract.isApprovedForAll(msg.sender, address(this)),
             "NFTMarketplace: the contract is unauthorized to manage this token"
         );
+        require(_price > 0, "NFTMarketplace: price must be greater than 0");
         _orderIdCount.increment();
         uint256 orderId = _orderIdCount.current();
         orders[orderId] = Order(
@@ -162,6 +166,7 @@ contract NFTMarketplace is Ownable {
 
     function executeOrder(uint256 _orderId) external {
         Order storage order = orders[_orderId];
+        require(order.seller != msg.sender, "NFTMarketplace: buyer must be different from seller");
         require(order.price > 0, "NFTMarketplace: order has been canceled");
         require(
             order.buyer == address(0),
@@ -171,7 +176,7 @@ contract NFTMarketplace is Ownable {
             !isSeller(_orderId, msg.sender),
             "NFTMarketplace: must be owner"
         );
-
+        order.buyer = msg.sender;
         uint256 feeAmount = _calculateFee(_orderId);
         if (feeAmount > 0) {
             IERC20(order.paymentToken).transferFrom(
