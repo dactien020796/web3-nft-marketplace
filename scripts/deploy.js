@@ -16,10 +16,28 @@ async function main() {
   // We get the contract to deploy
   const Charm = await hre.ethers.getContractFactory("Charm");
   const charm = await Charm.deploy();
-
   await charm.deployed();
+  console.log("Charm deployed to:", charm.address);
 
-  console.log("Greeter deployed to:", charm.address);
+  const Petty = await hre.ethers.getContractFactory("Petty");
+  const petty = await Petty.deploy();
+  await petty.deployed();
+  console.log("Petty deployed to:", petty.address);
+
+  const Reserve = await hre.ethers.getContractFactory("Reserve");
+  const reserve = await Reserve.deploy(charm.address);
+  await reserve.deployed();
+  console.log("Reserve deployed to:", reserve.address);
+
+  const defaultFeeRate = 10;
+  const Marketplace = await hre.ethers.getContractFactory("NFTMarketplace");
+  const marketplace = await Marketplace.deploy(
+    petty.address,
+    defaultFeeRate,
+    reserve.address
+  );
+  await marketplace.deployed();
+  console.log("Marketplace deployed to:", marketplace.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
