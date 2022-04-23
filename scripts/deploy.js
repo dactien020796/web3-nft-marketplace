@@ -37,7 +37,14 @@ async function main() {
     reserve.address
   );
   await marketplace.deployed();
+  await marketplace.addPaymentToken(charm.address);
   console.log("Marketplace deployed to:", marketplace.address);
+
+  console.log(
+    `Charm is payment token: ${await marketplace.isPaymentTokenSupported(
+      charm.address
+    )}`
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
